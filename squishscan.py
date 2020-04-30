@@ -14,7 +14,7 @@ import psutil
 
 
 # use default of localhost, port 9200
-es = elasticsearch.Elasticsearch("http://acme:9200/")
+es = elasticsearch.Elasticsearch("http://10.231.154.121:9200/")
 
 es.indices.delete(index='isi', ignore=[400, 404])
 
@@ -27,13 +27,17 @@ def indexcompress(i, base, name):
     gzipcompressedsize = 0
     print("files:", os.path.join(base, name))
     fullfilepath = os.path.join(base, name)
-    mymagicstring = magic.from_buffer(open(fullfilepath).read(2048),mime=True)
+    #omymagicstring = magic.from_buffer(open(fullfilepath).read(2048),mime=True)
+    m=magic.open(magic.MAGIC_NONE)
+    m.load
+    mymagicstring = m.file(fullfilepath)
     filesize = os.path.getsize(os.path.join(base, name))
     meta['path'] = os.path.join(base, name)
     mymetapieces = {'path': fullfilepath, 'magicident': mymagicstring,
                     'filesize': filesize, 'gzipcompressedsize': gzipcompressedsize}
     print ("Found thread", i, fullfilepath, json.dumps(mymetapieces))
-    gzipcompressname = os.path.join(base, name + ".compressiontest.gzip")
+    #gzipcompressname = os.path.join(base, name + ".compressiontest.gzip")
+    gzipcompressname = os.path.join("/mnt/ramdisk", name + ".compressiontest.gzip")
     with open(fullfilepath, 'rb') as f_in, gzip.open(gzipcompressname, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
     gzipcompressedsize = os.path.getsize(gzipcompressname)
@@ -60,7 +64,7 @@ def cleanupmygzip(i, base, name):
 
 
 if 1:
-    for base, subdirs, files in os.walk('/dlink/workingset'):
+    for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
         # for base, subdirs, files in os.walk('testdata'):
         for name in files:
             if name.endswith('.compressiontest.gzip'):
@@ -74,9 +78,9 @@ if 1:
                     t.start()
 
 
-if 1:
+if 0:
 
-    for base, subdirs, files in os.walk('/dlink/workingset'):
+    for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
         #	for base, subdirs, files in os.walk('testdata/'):
         for name in files:
             if name.endswith('.compressiontest.gzip'):
