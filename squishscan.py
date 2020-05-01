@@ -84,6 +84,14 @@ def lookup(mylookuphash):
 
 
 
+if (1):
+    #pruge incomplete gzips from ram disk
+    import os
+    import glob
+
+    ramdiskfiles = glob.glob('/mnt/ramdisk/*')
+    for f in ramdiskfiles:
+        os.remove(f)
 
 
 if 1:
