@@ -32,10 +32,15 @@ def indexcompress(i, base, name):
     gzipcompressedsize = 0
     print("files:", os.path.join(base, name))
     fullfilepath = os.path.join(base, name)
-    #omymagicstring = magic.from_buffer(open(fullfilepath).read(2048),mime=True)
-    m=magic.open(magic.MAGIC_NONE)
-    m.load
-    mymagicstring = m.file(fullfilepath)
+    #mymagicstring = magic.from_buffer(open(fullfilepath).read(2048),mime=True)
+    mymagicstring = magic.from_file(fullfilepath,mime=True)
+    #m=magic.open(magic.MAGIC_MIME)
+    #m.load
+    #mymagicstring = m.file(fullfilepath)
+    #mymagicstring = m.file(fullfilepath)
+    #mime = magic.Magic(mime=true)
+    #mymagicstring = mime.from_file(fullfilepath)
+    #print ("my magic string check", fullfilepath, mymagicstring)
     filesize = os.path.getsize(os.path.join(base, name))
     meta['path'] = os.path.join(base, name)
     mymetapieces = {'path': fullfilepath, 'magicident': mymagicstring,
@@ -68,6 +73,19 @@ def cleanupmygzip(i, base, name):
     print ("Deleted ", gzipcompressname)
 
 
+def lookup(mylookuphash):
+    #put a search in ES for the hash 
+    #s = Search(using=client, index="isi") .filter("term", category="search")  .query("match", hash=mylookuphash \ 
+    #        s.aggs.bucket('ar_tag', 'terms', field='tags') \
+    #                    .metric('max_lines', 'max', field='lines')
+
+    #response = s.execute()
+    return count(response)
+
+
+
+
+
 if 1:
     for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
         # for base, subdirs, files in os.walk('testdata'):
@@ -77,12 +95,17 @@ if 1:
                     t = Thread(target=cleanupmygzip, args=(i, base, name))
                     t.start()
             else:
-                print("Cores available", psutil.cpu_count(), threading.active_count())
-                while (threading.active_count() >  psutil.cpu_count()) : 
-                       time.sleep( 10 )
-                for i in range(1):
-                    t = Thread(target=indexcompress, args=(i, base, name))
-                    t.start()
+                with open( os.path.join(base, name),"rb") as f:
+                         bytes= f.read()
+                         mylookuphash = hashlib.md5(bytes).hexdigest()
+
+                if (1 ):
+                    print("Cores available", psutil.cpu_count(), threading.active_count())
+                    while (threading.active_count() >  psutil.cpu_count()) : 
+                           time.sleep( 10 )
+                    for i in range(1):
+                        t = Thread(target=indexcompress, args=(i, base, name))
+                        t.start()
 
 
 
