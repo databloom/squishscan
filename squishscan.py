@@ -11,6 +11,7 @@ from threading import Thread
 import multiprocessing
 import psutil
 import threading
+import hashlib
 
 
 # use default of localhost, port 9200
@@ -24,6 +25,10 @@ mymetapieces = []
 
 
 def indexcompress(i, base, name):
+    with open( os.path.join(base, name),"rb") as f:
+        bytes= f.read()
+        readable_hash = hashlib.md5(bytes).hexdigest()
+
     gzipcompressedsize = 0
     print("files:", os.path.join(base, name))
     fullfilepath = os.path.join(base, name)
@@ -47,12 +52,12 @@ def indexcompress(i, base, name):
     filenamesuffix = ""
     filenamesuffix = os.path.splitext(name)[1]
     mymetapieces = {'path': fullfilepath, 'magicident': mymagicstring, 'filesize': filesize, 'gzipcompressedsize': gzipcompressedsize,
-                    'compressionratio_gzip': compressionratio_gzip, 'spacesavingsgzip': spacesavingsgzip, 'filenamesuffix': filenamesuffix}
+            'compressionratio_gzip': compressionratio_gzip, 'spacesavingsgzip': spacesavingsgzip, 'filenamesuffix': filenamesuffix, 'hash': readable_hash}
     print("Compressing thread ", i, gzipcompressname, mymetapieces)
     es.index(index='isi', doc_type='message',
              id=meta['path'], body=mymetapieces)
     print("Indexing files and uploading compression numbers for: thread ",
-          i,  gzipcompressname, mymetapieces)
+            i,  gzipcompressname, mymetapieces)
     os.remove(gzipcompressname)
     print("Removed temp file thread ", i, gzipcompressname)
 
