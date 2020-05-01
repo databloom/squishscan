@@ -1,16 +1,16 @@
 #!/usr/local/bin/python
-
+import time
 import magic
 import json
 from json import JSONDecoder
 import os
 import elasticsearch
-#import bz2
 import gzip
 import shutil
 from threading import Thread
 import multiprocessing
 import psutil
+import threading
 
 
 # use default of localhost, port 9200
@@ -35,7 +35,7 @@ def indexcompress(i, base, name):
     meta['path'] = os.path.join(base, name)
     mymetapieces = {'path': fullfilepath, 'magicident': mymagicstring,
                     'filesize': filesize, 'gzipcompressedsize': gzipcompressedsize}
-    print ("Found thread", i, fullfilepath, json.dumps(mymetapieces))
+    #print ("Launched new thread", fullfilepath, json.dumps(mymetapieces))
     #gzipcompressname = os.path.join(base, name + ".compressiontest.gzip")
     gzipcompressname = os.path.join("/mnt/ramdisk", name + ".compressiontest.gzip")
     with open(fullfilepath, 'rb') as f_in, gzip.open(gzipcompressname, 'wb') as f_out:
@@ -72,10 +72,13 @@ if 1:
                     t = Thread(target=cleanupmygzip, args=(i, base, name))
                     t.start()
             else:
-                print("Cores available", psutil.cpu_count())
+                print("Cores available", psutil.cpu_count(), threading.active_count())
+                while (threading.active_count() >  psutil.cpu_count()) : 
+                       time.sleep( 10 )
                 for i in range(1):
                     t = Thread(target=indexcompress, args=(i, base, name))
                     t.start()
+
 
 
 if 0:
@@ -84,7 +87,8 @@ if 0:
         #	for base, subdirs, files in os.walk('testdata/'):
         for name in files:
             if name.endswith('.compressiontest.gzip'):
-                print("Cores available", psutil.cpu_count())
+                processcntr = threading.Active_Count()
+                print("Cores available", psutil.cpu_count(), threading.Active_Count())
                 for i in range(1):
                     t = Thread(target=cleanupmygzip, args=(i, base, name))
                     t.start()
