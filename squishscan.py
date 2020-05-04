@@ -17,7 +17,7 @@ import hashlib
 # use default of localhost, port 9200
 es = elasticsearch.Elasticsearch("http://10.231.154.121:9200/")
 
-es.indices.delete(index='isi', ignore=[400, 404])
+#es.indices.delete(index='isi', ignore=[400, 404])
 
 
 meta = {}
@@ -80,22 +80,16 @@ def lookup(mylookuphash):
     #                    .metric('max_lines', 'max', field='lines')
 
     #response = s.execute()
-    return count(response)
+    res = es.search(index="isi",body={"query": {"match": {'hash': mylookuphash}}})
+    print("Got %d Hits:" % res['hits']['total']['value'])
+    myhits = len(res['hits']['hits'])
+    print(myhits)
+    return myhits 
 
 
-
-if (1):
-    #pruge incomplete gzips from ram disk
-    import os
-    import glob
-
-    ramdiskfiles = glob.glob('/mnt/ramdisk/*')
-    for f in ramdiskfiles:
-        os.remove(f)
-
-
-if 1:
-    for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
+def scanfiles(topleveldirectory):
+    #for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
+    for base, subdirs, files in os.walk(topleveldirectory):
         # for base, subdirs, files in os.walk('testdata'):
         for name in files:
             if name.endswith('.compressiontest.gzip'):
@@ -107,7 +101,8 @@ if 1:
                          bytes= f.read()
                          mylookuphash = hashlib.md5(bytes).hexdigest()
 
-                if (1 ):
+                mylookuptest = (lookup(mylookuphash))
+                if  mylookuptest  < 1  :
                     print("Cores available", psutil.cpu_count(), threading.active_count())
                     while (threading.active_count() >  psutil.cpu_count()) : 
                            time.sleep( 10 )
@@ -115,6 +110,24 @@ if 1:
                         t = Thread(target=indexcompress, args=(i, base, name))
                         t.start()
 
+
+def cleanramdisk():
+    #pruge incomplete gzips from ram disk
+    import os
+    import glob
+
+    ramdiskfiles = glob.glob('/mnt/ramdisk/*')
+    for f in ramdiskfiles:
+        os.remove(f)
+
+
+
+
+
+scanfiles("/gonzo")
+cleanramdisk()
+scanfiles("/f810")
+cleanramdisk()
 
 
 if 0:
