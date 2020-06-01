@@ -15,9 +15,10 @@ import hashlib
 
 
 # use default of localhost, port 9200
-es = elasticsearch.Elasticsearch("http://10.231.154.121:9200/")
+es = elasticsearch.Elasticsearch("http://acme:9200/")
 
-#es.indices.delete(index='isi', ignore=[400, 404])
+es.indices.delete(index='isi', ignore=[400, 404])
+es.indices.create(index='isi', ignore=[400, 404])
 
 
 meta = {}
@@ -124,9 +125,9 @@ def cleanramdisk():
 
 
 
-scanfiles("/gonzo")
+scanfiles("/ifs/smalltest")
 cleanramdisk()
-scanfiles("/f810")
+#scanfiles("/dlink")
 cleanramdisk()
 
 
