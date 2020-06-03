@@ -12,12 +12,13 @@ import multiprocessing
 import psutil
 import threading
 import hashlib
+import timeit
 
 
 # use default of localhost, port 9200
-es = elasticsearch.Elasticsearch("http://acme:9200/")
+es = elasticsearch.Elasticsearch("http://10.231.154.121:9200/")
 
-es.indices.delete(index='isi', ignore=[400, 404])
+#es.indices.delete(index='isi', ignore=[400, 404])
 es.indices.create(index='isi', ignore=[400, 404])
 
 
@@ -26,6 +27,7 @@ mymetapieces = []
 
 
 def indexcompress(i, base, name):
+    ts = time.time()
     with open( os.path.join(base, name),"rb") as f:
         bytes= f.read()
         readable_hash = hashlib.md5(bytes).hexdigest()
@@ -66,6 +68,8 @@ def indexcompress(i, base, name):
             i,  gzipcompressname, mymetapieces)
     os.remove(gzipcompressname)
     print("Removed temp file thread ", i, gzipcompressname)
+    te = time.time()
+    print("Execution time", te-ts)
 
 
 def cleanupmygzip(i, base, name):
@@ -81,14 +85,18 @@ def lookup(mylookuphash):
     #                    .metric('max_lines', 'max', field='lines')
 
     #response = s.execute()
+    ts=time.time()
     res = es.search(index="isi",body={"query": {"match": {'hash': mylookuphash}}})
-    print("Got %d Hits:" % res['hits']['total']['value'])
+    print("Found already scanned file, ignoring %d Hits:" % res['hits']['total']['value'])
     myhits = len(res['hits']['hits'])
     print(myhits)
     return myhits 
+    te = time.time()
+    print("Execution time", te-ts)
 
 
 def scanfiles(topleveldirectory):
+    ts=time.time()
     #for base, subdirs, files in os.walk('/f810/cribsbiox.west.isilon.com/datasets/'):
     for base, subdirs, files in os.walk(topleveldirectory):
         # for base, subdirs, files in os.walk('testdata'):
@@ -110,6 +118,7 @@ def scanfiles(topleveldirectory):
                     for i in range(1):
                         t = Thread(target=indexcompress, args=(i, base, name))
                         t.start()
+    print("Execution time", te-ts)
 
 
 def cleanramdisk():
@@ -125,7 +134,7 @@ def cleanramdisk():
 
 
 
-scanfiles("/ifs/smalltest")
+scanfiles("/gonzo/imgs")
 cleanramdisk()
 #scanfiles("/dlink")
 cleanramdisk()
